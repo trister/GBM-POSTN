@@ -37,32 +37,9 @@ mutationData <- read.delim(paste(mutationLoad$cacheDir,mutationLoad$files,sep="/
 #methylationData <- read.delim(paste(methylationLoad$cacheDir,methylationLoad$files,sep="/"))))
 
 
-#to load methylation data, we will have to load each individual group of level 3 data and then concatenate
-
-#temp <- synapseQuery("select name from entity where parentId=='syn220836'")
-#foo <- temp[grep("jhu-usc.edu_GBM.HumanMethylation450.Level_3",temp[,1]),2]
-
-#methylationData <- c()
-
-#for (i in 1:length(foo)){
-#  methylationLoad <- loadEntity(paste("'",foo[i],"'",sep=""))
-#  
-#  for (j in 1:length(methylationLoad$files)){
-#    if(grep("jhu-usc.edu_GBM",methylationLoad$files[j])!=0){
-#      temp.2 <- read.delim(paste(methylationLoad$cacheDir,methylationLoad$files[j],sep="/"),skip=1)
-#      temp.3 <- names(methylationData)
-#      methylationData <- c(methylationData,temp.2$Beta_Value)
-#      names(methylationData) <- c(temp.3,substring(methylationLoad$files[j],93,107))
-#    }
-#  }
-#}
-
-# foo <- temp[grep("jhu-usc.edu_GBM.HumanMethylation27.Level_3",temp[,1]),2]
-
-
-#methylationLoad <- loadEntity('syn222728') #SCR for level 3 methylation data
-#methylationData <- read.delim(paste(methylationLoad$cacheDir,methylationLoad$files[5],sep="/"))
-
+#load the preprocessed level 3 calls (both 27 and 450)
+methylationLoad <- loadEntity('syn1334844')
+methylationData <- methylationLoad$objects$methylation
 
 
 
