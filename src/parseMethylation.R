@@ -17,10 +17,8 @@ synapseLogin()
 #myStudy <- Study(list(name="Level 3 Methylation", parentId=propertyValue(myProject,"id")))
 #myStudy <- createEntity(myStudy)
 
-#myData <- ExpressionData(list(name="Combined 27 and 450", parentId = properties(myStudy)$id))
+#myData <- ExpressionData(list(name="New combined 27 and 450", parentId = properties(myStudy)$id))
 #myData <- createEntity(myData)
-
-#myData <- loadEntity('syn1334844')
 
 
 # start by running a loop over the Methylation27 files
@@ -38,12 +36,34 @@ for(i in 1:length(combination)){
   columns <- c(columns,combination[[i]]$barcode[1])
 }
 
+#find the subjects that were repeated
+columnsTemp <- substring(columns,1,12)
 
-colnames(methylationTemp) <- columns
+valTemp <- lapply(unique(columnsTemp[which(duplicated(columnsTemp))]),function(x){
+  temp <- methylationTemp[,grep(x, columns)]
+  return(apply(temp,1,function(y){mean(y,na.rm=T)}))
+})
+
+for(i in 1:length(unique(columnsTemp[which(duplicated(columnsTemp))]))) {
+  temp <- grep(unique(columnsTemp[which(duplicated(columnsTemp))])[i],columns)
+  methylationTemp <- methylationTemp[,-temp]
+  columns <- columns[-temp]
+  methylationTemp <- cbind(methylationTemp,valTemp[[i]])
+  columns <- c(columns,unique(columnsTemp[which(duplicated(columnsTemp))])[i])
+  
+}
+
+colnames(methylationTemp) <- substring(columns,1,12)
 rownames(methylationTemp) <- combination[[1]]$probe.name
 
 
 methylation <- methylationTemp
+
+
+
+
+
+
 
 #now repeat for the Methylation450 files
 mainDir <- "~/DNA_Methylation/JHU_USC__HumanMethylation450/Level_3/"
@@ -65,16 +85,46 @@ for(i in 1:length(combination)){
 }
 
 
+
+#find the subjects that were repeated
+columnsTemp <- substring(columns,1,12)
+
+valTemp <- lapply(unique(columnsTemp[which(duplicated(columnsTemp))]),function(x){
+  temp <- methylationTemp[,grep(x, columns)]
+  return(apply(temp,1,function(y){mean(y,na.rm=T)}))
+})
+
+for(i in 1:length(unique(columnsTemp[which(duplicated(columnsTemp))]))) {
+  temp <- grep(unique(columnsTemp[which(duplicated(columnsTemp))])[i],columns)
+  methylationTemp <- methylationTemp[,-temp]
+  columns <- columns[-temp]
+  methylationTemp <- cbind(methylationTemp,valTemp[[i]])
+  columns <- c(columns,unique(columnsTemp[which(duplicated(columnsTemp))])[i])
+  
+}
+
+
 colnames(methylationTemp) <- substring(columns,1,12)
 rownames(methylationTemp) <- combination[[1]]$probe.name
 
-intersect(names(methylationTemp),names(methylation))
+#now check to make sure that there are no repeats in the original set from 27k
+temp <- intersect(colnames(methylationTemp),colnames(methylation))
+methylationTemp <- methylationTemp[,!colnames(methylationTemp) %in% temp]
+
+
 
 methylation <- cbind(methylation,methylationTemp[intersectProbes,])
 
 
 #now push the entire thing up to Synapse
-myData <- addObject(myData, methylation)
-myData <- storeEntity(myData)
+#myData <- getEntity('syn1334844')
 
-#myData <- loadEntity('syn1334844')
+myData <- ExpressionData(list(name="New combined 27 and 450", parentId = myData$properties$parentId))
+myData <- createEntity(myData)
+
+
+myData <- addObject(myData, methylation)
+myData <- storeEntity(myData) #syn1352976
+
+
+

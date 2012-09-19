@@ -19,6 +19,17 @@ table(predictedClasses)
 metadata$karnofsky_performance_score[metadata$karnofsky_performance_score=="[Pending]"] <- NA
 metadata$karnofsky_performance_score <- as.numeric(metadata$karnofsky_performance_score)
 
+
+
+#put in the MGMT status
+metadata$MGMT <- rep(NA,length(metadata$bcr_patient_barcode))
+
+for (i in 1:length(metadata$bcr_patient_barcode)) {
+  if(length(grep(metadata$bcr_patient_barcode[i],colnames(MGMTculled)))!=0) {
+    metadata$MGMT[i] <- MGMTculled['MGMT',grep(metadata$bcr_patient_barcode[i],colnames(MGMTculled))]
+  }
+}
+
 #Find the IDH1 mutations
 length(unique(mutationData$Tumor_Sample_Barcode))
 
@@ -53,25 +64,13 @@ metadata$RTK[which(temp %in% RTK)] <- 1
 
 as.factor(metadata$AKT)
 
-#Deal with the methylation data
-dim(methylationData)
-names(methylationData) <- substring(names(methylationData),1,15)
-names(methylationData) <- gsub("(\\.)","-",names(methylationData),perl=T)
-
-
-dat.meth <- methylationData[,intersect(temp,colnames(methylationData))]
-dim(dat.meth)
-
-#remove the NAs from dat.meth
-count.na.row <- rowSums(is.na(dat.meth))
   
-  
-  
-  
+    
+#logistic regression time
 mylogit <- glm(predictedClasses~metadata$karnofsky_performance_score+metadata$age_at_initial_pathologic_diagnosis+
   as.factor(metadata$gender)+as.factor(metadata$IDH1)+as.factor(metadata$P53)+
   as.factor(metadata$PTEN)+as.factor(metadata$AKT)+as.factor(metadata$RTK)+
-  as.factor(metadata$RB),na.action=na.pass)
+  as.factor(metadata$RB) +as.factor(metadata$MGMT),na.action=na.exclude)
 
 summary(mylogit)
 

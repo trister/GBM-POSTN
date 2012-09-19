@@ -26,6 +26,7 @@ miRNAdata <- exprs(miRNAdata$objects$eset)
 
 metadataLoad <- loadEntity('syn673127') #all of the coherent metadata
 metadata <- metadataLoad$objects$metadata #extract the R object
+metadataAll <- metadata
 
 #exonLoad <- loadEntity('syn313638') #Using Exon expression
 #huexdata <- exprs(exonLoad$objects$eset)
@@ -38,7 +39,8 @@ mutationData <- read.delim(paste(mutationLoad$cacheDir,mutationLoad$files,sep="/
 
 
 #load the preprocessed level 3 calls (both 27 and 450)
-methylationLoad <- loadEntity('syn1334844')
+#methylationLoad <- loadEntity('syn1334844')
+methylationLoad <- loadEntity('syn1352976')
 methylationData <- methylationLoad$objects$methylation
 
 

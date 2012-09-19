@@ -17,6 +17,8 @@ source("./src/populateData.R")
 
 #now perform a survival analysis on the TCGA based on expression of POSTN
 source("./src/POSTN-TCGA-survival.R")
+#and a logistic regression on the same data
+source("./src/TCGA-logistic.R")
 
 #and do the same for REMBRANDT
 source("./src/POSTN-REMBRANDT-survival.R")
