@@ -10,6 +10,7 @@
 require(ggplot2)
 require(survival)
 require(mixtools)
+require(reshape2)
 source("./src/ggkm.R")
 
 
@@ -75,3 +76,11 @@ boxplot(phillipsEset['10631_mt',recurrentGBM],phillipsEset['10631_mt',matchedPri
 axis(1,at=c(1,2),labels=c("Recurrent","Primary"))
 
 t.test(phillipsEset['10631_mt',recurrentGBM],phillipsEset['10631_mt',matchedPrimaryGBM])
+
+
+# now make a nice ggplot
+group <- rep(c("primary","recurrence"),each=length(recurrent))
+df <- data.frame(id=seq_along(group),group,phillipsEset['10631_mt',matchedPrimary],phillipsEset['10631_mt',recurrent])
+dfm <- melt(df,id.var=c("id","group"))
+
+ggplot(dfm,aes(variable,2^value,group=id)) + geom_path(alpha=0.5) +coord_trans(y="log2")

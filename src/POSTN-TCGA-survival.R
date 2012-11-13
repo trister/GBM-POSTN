@@ -57,3 +57,25 @@ ggkm(survfit(tmpSurv ~ predictedClasses), ystratalabs = (c("POSTN High", "POSTN 
      timeby = 365,
      main = "GBM K-M Plot By POSTN Expression (TCGA)")
 
+
+
+
+
+#now let's consider survival for the upper 10% versus the lowest 10%
+quantile(eset['10631_eg',],probs=seq(0,1,0.1))
+
+
+#use this for cuts with cutpoint (one SD away from mean)
+lowerCutpoint <- quantile(eset['10631_eg',],probs=seq(0,1,.1))[2]
+upperCutpoint <- quantile(eset['10631_eg',],probs=seq(0,1,.1))[10]
+
+for(i in 1:length(colnames(eset))) {
+  if(eset['10631_eg',i] < lowerCutpoint)
+    predictedClasses[i] <- 2
+  else if(eset['10631_eg',i]  > upperCutpoint)
+    predictedClasses[i] <- 1
+  else
+    predictedClasses[i] <- NA
+}
+
+

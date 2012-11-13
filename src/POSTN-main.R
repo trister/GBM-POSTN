@@ -17,11 +17,17 @@ source("./src/populateData.R")
 
 #now perform a survival analysis on the TCGA based on expression of POSTN
 source("./src/POSTN-TCGA-survival.R")
+#check the MGMT status
+source("./src/MGMT-survival.R")
 #and a logistic regression on the same data
 source("./src/TCGA-logistic.R")
 
-#and do the same for REMBRANDT
+#and do the survival for all of REMBRANDT
 source("./src/POSTN-REMBRANDT-survival.R")
+
+
+#use elastic net to train on TCGA and validate in REMBRANDT
+source("./src/enet-POSTN.R")
 
 #and now break down each of the grades in REMBRANDT
 

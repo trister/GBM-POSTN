@@ -67,10 +67,15 @@ as.factor(metadata$AKT)
   
     
 #logistic regression time
+# mylogit <- glm(predictedClasses~metadata$karnofsky_performance_score+metadata$age_at_initial_pathologic_diagnosis+
+#   as.factor(metadata$gender)+as.factor(metadata$IDH1)+as.factor(metadata$P53)+
+#   as.factor(metadata$PTEN)+as.factor(metadata$AKT)+as.factor(metadata$RTK)+
+#   as.factor(metadata$RB) +as.factor(metadata$MGMT),na.action=na.exclude)
+# 
+
 mylogit <- glm(predictedClasses~metadata$karnofsky_performance_score+metadata$age_at_initial_pathologic_diagnosis+
-  as.factor(metadata$gender)+as.factor(metadata$IDH1)+as.factor(metadata$P53)+
-  as.factor(metadata$PTEN)+as.factor(metadata$AKT)+as.factor(metadata$RTK)+
-  as.factor(metadata$RB) +as.factor(metadata$MGMT),na.action=na.exclude)
+  as.factor(metadata$gender)+as.factor(metadata$IDH1)+
+  as.factor(metadata$PTEN)+as.factor(metadata$AKT)+as.factor(metadata$RTK)+ as.factor(metadata$MGMT),na.action=na.exclude)
 
 summary(mylogit)
 
