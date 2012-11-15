@@ -26,8 +26,6 @@ source("./src/TCGA-logistic.R")
 source("./src/POSTN-REMBRANDT-survival.R")
 
 
-#use elastic net to train on TCGA and validate in REMBRANDT
-source("./src/enet-POSTN.R")
 
 #and now break down each of the grades in REMBRANDT
 
@@ -42,4 +40,8 @@ source("./src/POSTN-GBM-all.R")
 #and now look at the GEO set from Heidi Phillips GSE4721
 source("./src/Phillips-matched-POSTN.R") #matched analysis
 source("./src/POSTN-Phillips-survival.R") #survival
+
+
+#use elastic net to train on TCGA and validate in REMBRANDT
+source("./src/enet-POSTN.R")
 

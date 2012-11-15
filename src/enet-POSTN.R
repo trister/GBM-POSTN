@@ -77,16 +77,39 @@ rembrandtEset.culled <- rembrandtEset.culled[-grep("10631_eg",rownames(rembrandt
 
 
 # run the elastic net model
-cv.fit <- cv.glmnet(x=t(eset.culled), y=eset["10631_eg",], nfolds=10, alpha=.1, family="gaussian")
-plot(cv.fit)
-fitEnet <- glmnet(x=t(eset.culled), y=eset["10631_eg",], family="gaussian", alpha=.1, lambda=cv.fit$lambda.min)
-
-
-# cv.fit <- cv.glmnet(x=t(eset.culled), y=factor(predictedClasses), nfolds=10, alpha=.1, family="binomial")
+#  cv.fit <- cv.glmnet(x=t(eset.culled), y=eset["10631_eg",], nfolds=10, alpha=.1, family="gaussian")
+#  plot(cv.fit)
+#  fitEnet <- glmnet(x=t(eset.culled), y=eset["10631_eg",], family="gaussian", alpha=.1, lambda=cv.fit$lambda.min)
+# 
+# cv.fit <- cv.glmnet(x=t(eset), y=factor(predictedClasses), nfolds=10, alpha=.1, family="binomial")
 # plot(cv.fit)
-# fitEnet <- glmnet(x=t(eset.culled), y=factor(predictedClasses), family="binomial", alpha=.1, lambda=cv.fit$lambda.min)
+# fitEnet <- glmnet(x=t(eset), y=factor(predictedClasses), family="binomial", alpha=.1, lambda=cv.fit$lambda.min)
 
-yhatEnet <- predict(fitEnet, t(rembrandtEset.culled), type="response", s="lambda.min")
+
+cv.fit <- cv.glmnet(x=t(eset.culled), y=factor(predictedClasses), nfolds=10, alpha=.1, family="binomial")
+plot(cv.fit)
+fitEnet <- glmnet(x=t(eset.culled), y=factor(predictedClasses), family="binomial", alpha=.1, lambda=cv.fit$lambda.min)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+###############################################################################
+#  Look now at all patients in REMBRANDT                                      #
+###############################################################################
+
+
+yhatEnet <- predict(fitEnet, t(rembrandtEset.culled), type="response", s="lambda.min")  #all of REMBRANDT
+
 boxplot(yhatEnet ~ predictedClasses.rembrandt, ylab="3-year OS prediction (%)", xlab="predicted POSTN group", main="elastic net validation")
 stripchart(yhatEnet ~ predictedClasses.rembrandt,pch=20, col="royalblue", vertical=TRUE, add=TRUE, cex=.6)
 
@@ -102,15 +125,87 @@ survdiff(tmpSurv.rembrandt  ~ riskEnet, rho=0)
 
 
 
-ggkm(survfit(tmpSurv.rembrandt  ~ riskEnet),timeby=12,main="KM of REMBRANDT")
-ggkm(survfit(tmpSurv.rembrandt[which(rembrandtPat$Disease==" GBM")]~riskEnet[which(rembrandtPat$Disease==" GBM")]),timeby=12,
-     main="KM of REMBRANDT GBM")
+###############################################################################
+#  Look now at only the Grade III                                             #
+###############################################################################
 
-ggkm(survfit(tmpSurv.rembrandt[which(rembrandtPat$Disease==" ASTROCYTOMA")]~riskEnet[which(rembrandtPat$Disease==" ASTROCYTOMA")]),timeby=12,
-     ystratalabs = c("Unfavorable","Favorable"),main="KM of REMBRANDT ASTROCYTOMA")
 
-ggkm(survfit(tmpSurv.rembrandt[which(rembrandtPat$Disease==" OLIGODENDROGLIOMA")]~riskEnet[which(rembrandtPat$Disease==" OLIGODENDROGLIOMA")]),timeby=12,
-     ystratalabs = c("Unfavorable","Favorable"),main="KM of REMBRANDT OLIGODENDROGLIOMA")
+lowgradePat <- c()
+lowgradePat$surv <- gbmPat.rembrandt$surv[which(rembrandtPat$Grade==" III")]
+lowgradePat$survTime <- gbmPat.rembrandt$survTime[which(rembrandtPat$Grade==" III")]
+
+
+tmpSurv.lowgrade <- Surv(lowgradePat$survTime,lowgradePat$surv)
+
+
+yhatEnet <- predict(fitEnet, t(rembrandtEset.culled[,which(rembrandtPat$Grade==" III")]), type="response", s="lambda.min")
+
+boxplot(yhatEnet ~ predictedClasses.rembrandt[which(rembrandtPat$Grade==" III")], ylab="3-year OS prediction (%)", xlab="predicted POSTN group", main="elastic net validation")
+stripchart(yhatEnet ~ predictedClasses.rembrandt[which(rembrandtPat$Grade==" III")],pch=20, col="royalblue", vertical=TRUE, add=TRUE, cex=.6)
+
+rocEnet <- roc(predictor=as.numeric(yhatEnet), response=as.numeric(predictedClasses.rembrandt[which(rembrandtPat$Grade==" III")]),ci=TRUE)
+plot.roc(rocEnet,col="red")
+
+riskEnet <- as.vector(ifelse(yhatEnet >= median(yhatEnet), 1, 0))
+names(riskEnet) <- rownames(yhatEnet)
+
+
+
+ggkm(survfit(tmpSurv.lowgrade  ~ riskEnet),timeby=12,main="KM of REMBRANDT")
+summary(survfit(tmpSurv.lowgrade  ~ riskEnet))
+
+plot(survfit(tmpSurv.lowgrade ~ riskEnet), main="elastic net model", xlab="months",ylab="probability of OS",col= c("blue","magenta"),lwd=3)
+survdiff(tmpSurv.lowgrade ~ riskEnet, rho=0)
+
+
+
+
+
+
+
+
+
+
+###############################################################################
+#  Look now at only the Grade II                                              #
+###############################################################################
+
+
+lowgradePat <- c()
+lowgradePat$surv <- gbmPat.rembrandt$surv[which(rembrandtPat$Grade==" II")]
+lowgradePat$survTime <- gbmPat.rembrandt$survTime[which(rembrandtPat$Grade==" II")]
+
+tmpSurv.lowgrade <- Surv(lowgradePat$survTime,lowgradePat$surv)
+
+
+yhatEnet <- predict(fitEnet, t(rembrandtEset.culled[,which(rembrandtPat$Grade==" II")]), type="response", s="lambda.min") 
+
+boxplot(yhatEnet ~ predictedClasses.rembrandt[which(rembrandtPat$Grade==" II")], ylab="3-year OS prediction (%)", xlab="predicted POSTN group", main="elastic net validation")
+stripchart(yhatEnet ~ predictedClasses.rembrandt[which(rembrandtPat$Grade==" II")],pch=20, col="royalblue", vertical=TRUE, add=TRUE, cex=.6)
+
+rocEnet <- roc(predictor=as.numeric(yhatEnet), response=as.numeric(predictedClasses.rembrandt[which(rembrandtPat$Grade==" II")]),ci=TRUE)
+plot.roc(rocEnet,col="red")
+
+riskEnet <- as.vector(ifelse(yhatEnet >= 0.15, 1, 0))
+names(riskEnet) <- rownames(yhatEnet)
+
+
+
+ggkm(survfit(tmpSurv.lowgrade  ~ riskEnet),timeby=12,main="KM of REMBRANDT")
+summary(survfit(tmpSurv.lowgrade  ~ riskEnet))
+
+
+plot(survfit(tmpSurv.lowgrade ~ riskEnet), main="elastic net model", xlab="months",ylab="probability of OS",col= c("blue","magenta"),lwd=3)
+survdiff(tmpSurv.lowgrade ~ riskEnet, rho=0)
+
+
+
+
+
+
+
+
+
 
 
 heatmap(x=rembrandtEset.culled[which(abs(fitEnet$beta)>0),],
@@ -127,7 +222,24 @@ paste(unlist(gene.names),collapse=" ")
 
 
 
+##
+# Look at the Philips data
 
+phillipsEset.culled <- phillipsEset[-grep("10631_mt",rownames(phillipsEset)),recurrent]
+phillipsEset.culled <- cbind(phillipsEset.culled,phillipsEset[-grep("10631_mt",rownames(phillipsEset)),matchedPrimary])
+
+yhatEnet <- predict(fitEnet, t(phillipsEset.culled), type="response", s="lambda.min")
+boxplot(yhatEnet ~ c(rep(1,23),rep(0,23)), ylab="3-year OS prediction (%)", xlab="predicted POSTN group", main="elastic net validation")
+stripchart(yhatEnet ~ c(rep(1,23),rep(0,23)),pch=20, col="royalblue", vertical=TRUE, add=TRUE, cex=.6)
+
+
+
+riskEnet <- as.vector(ifelse(yhatEnet >= median(yhatEnet), 1, 0))
+names(riskEnet) <- rownames(yhatEnet)
+
+
+plot(survfit(tmpSurv.phillips  ~ riskEnet[1:23]), main="elastic net model", xlab="months",ylab="probability of OS",col= c("blue","magenta"),lwd=3)
+survdiff(tmpSurv.rembrandt  ~ riskEnet, rho=0)
 
 
 
@@ -147,8 +259,12 @@ tryfit <- c()
 for(i in c(1:100)) {
   print(i)
   N <- sample(colnames(eset.culled),559,replace=TRUE)
-  try.cv.fit <- cv.glmnet(x=t(eset.culled[,N]), y=factor(df[N,]), nfolds=10, alpha=0.1, family="binomial")
-  tryfit <- as.numeric(glmnet(x=t(eset.culled[,N]), y=factor(df[N,]), family="binomial", alpha=0.1, lambda=try.cv.fit$lambda.min)$beta)
+  
+  try.cv.fit <- cv.glmnet(x=t(eset.culled[,N]), y=eset["10631_eg",N], nfolds=10, alpha=.1, family="gaussian")
+  tryfit <- as.numeric(glmnet(x=t(eset.culled[,N]), y=eset["10631_eg",N], family="gaussian", alpha=0.1,lambda=try.cv.fit$lambda.min)$beta)
+  
+#   try.cv.fit <- cv.glmnet(x=t(eset.culled[,N]), y=factor(df[N,]), nfolds=10, alpha=0.1, family="binomial")
+#   tryfit <- as.numeric(glmnet(x=t(eset.culled[,N]), y=factor(df[N,]), family="binomial", alpha=0.1, lambda=try.cv.fit$lambda.min)$beta)
   tmp <- cbind(tmp,tryfit)
 }
 
@@ -163,6 +279,7 @@ bootEnetfit <- glm(w$predictedClass~. ,data = w, family = binomial())
 rm(w)
 
 yhatbootEnet <- predict(object=bootEnetfit, newdata=as.data.frame(t(rembrandtEset.culled)), type="response")
+
 boxplot(yhatbootEnet ~ (predictedClasses.rembrandt-1), ylab="prediction of POSTN expression", xlab="POSTN", main="bootstrap elastic net - molecular features")
 stripchart(yhatbootEnet ~ (predictedClasses.rembrandt-1),pch=20, col="royalblue", vertical=TRUE, add=TRUE, cex=.6)
 

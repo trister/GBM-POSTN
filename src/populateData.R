@@ -71,7 +71,7 @@ rembrandtDataReturn <- loadEntity('syn376920') #REMBRANDT CEL SNM Normalized
 rembrandtEset <- rembrandtDataReturn$objects$rembrandt.matrix.matched
 rembrandtPat <- rembrandtDataReturn$objects$phenotype.data.matched
 
-
+rembrandtPat[which(rembrandtPat$Patient.ID=="E09448"),"Grade"] <- " --"
 
 
 
