@@ -15,6 +15,9 @@ synapseLogin()
 #get all of the data structures necessary from Synapse
 source("./src/populateData.R") 
 
+#and look at any latent differences within the two datasets and rescale both sets to the same variance
+source("./src/SVD.R")
+
 #now perform a survival analysis on the TCGA based on expression of POSTN
 source("./src/POSTN-TCGA-survival.R")
 #check the MGMT status
@@ -45,3 +48,5 @@ source("./src/POSTN-Phillips-survival.R") #survival
 #use elastic net to train on TCGA and validate in REMBRANDT
 source("./src/enet-POSTN.R")
 
+#use elastic net to train on TCGA and validate in REMBRANDT
+source("./src/enet-TWIST1.R")

@@ -16,6 +16,7 @@ require(survival)
 require(pROC)
 require(pls)
 require(gplots)
+require(mixtools)
 source("./src/ggkm.R")
 library(org.Hs.eg.db)
 
