@@ -319,30 +319,43 @@ weightAggregation<-function(resultsModel){
   for(k in 1:length(resultsModel)){  
     #     a<-abs(resultsModel[[k]][-1])
     #     A<-sort(a,decreasing = T,index.return=T)
-    ResultBS<-cbind(ResultBS,rank(abs(as.numeric(resultsModel[[k]][-1])),ties.method="min")/length(resultsModel[[k]]))
+    ResultBS<-cbind(ResultBS,rank(abs(as.numeric(resultsModel[[k]])),ties.method="min")/length(resultsModel[[k]]))
   }
-  rownames(ResultBS)<-rownames(resultsModel[[1]])[-1]  
+  rownames(ResultBS)<-rownames(resultsModel[[1]])  
   reference <- apply(ResultBS,1,sum) 
   return(reference)
 }
 
 
+
+
 selected <- weightAggregation(features)
+
 plot(sort(selected))
+abline(v=length(selected)-100)
 
 #use the weighted aggregation to grab the top 100
 select_features <- sort(selected,decreasing=TRUE)[1:100]
+
+#find the correlations between the selected features and POSTN
+signFeatures <- unlist(lapply(names(select_features),function(y){
+  return(lm(eset["10631_eg",]~eset[y,])$coefficients[2])
+}))
+
+
+temp <- names(sort(select_features)[90:100])
+temp <- names(select_features)[which(signFeatures<=0)]
+
+gene.names <- lapply(temp,function(x){
+  return(xx[strsplit(x,"_eg")[[1]]])
+})
+
+paste(unlist(gene.names),collapse=" ")
 
 
 heatmap(x=rembrandtEset.scaled[names(sort(select_features)[90:100]),],
         ColSideColors=c("red","green","blue","yellow")[factor(rembrandtPat$Disease)],
         scale="none",col=redgreen(50),main="Elastic Net")
-
-gene.names <- lapply(names(sort(select_features)[90:100]),function(x){
-  return(xx[strsplit(x,"_eg")[[1]]])
-})
-
-paste(unlist(gene.names),collapse=" ")
 
 
 ###############################################################################
