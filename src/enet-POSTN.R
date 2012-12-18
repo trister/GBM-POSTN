@@ -77,6 +77,30 @@ eset.culled <- eset[-grep("10631_eg",rownames(eset)),]
 rembrandtEset.culled <- rembrandtEset.culled[-grep("10631_eg",rownames(rembrandtEset.culled)),]
 
 
+
+
+# first rescale the data (chemores) to have the same mean and variance than the LUAD
+# Justin's function to rescale the VS to get the same mean/var than the TS
+normalize_to_X <- function(mean.x, sd.x, Y){
+  m.y <- rowMeans(Y)
+  sd.y <- apply(Y, 1, sd)
+  Y.adj <- (Y - m.y) * sd.x / sd.y  + mean.x 
+  Y.adj[sd.y == 0] <- mean.x[sd.y==0]
+  Y.adj
+}
+
+tmp <- apply(eset.culled,1,sd)
+rembrandtEset.scaled <- normalize_to_X(rowMeans(eset.culled),tmp,rembrandtEset.culled)
+
+#get rid of the least variant probes
+tmp1 <- which(tmp>quantile(tmp,probs=0.2))
+eset.culled2 <- eset.culled[tmp1,]
+rembrandtEset.scaled <- rembrandtEset.scaled[tmp1,]
+rm(tmp,tmp1)
+
+
+
+
 # run the elastic net model
 #  cv.fit <- cv.glmnet(x=t(eset.culled), y=eset["10631_eg",], nfolds=10, alpha=.1, family="gaussian")
 #  plot(cv.fit)
@@ -87,9 +111,9 @@ rembrandtEset.culled <- rembrandtEset.culled[-grep("10631_eg",rownames(rembrandt
 # fitEnet <- glmnet(x=t(eset), y=factor(predictedClasses), family="binomial", alpha=.1, lambda=cv.fit$lambda.min)
 
 
-cv.fit <- cv.glmnet(x=t(eset.culled), y=factor(predictedClasses), nfolds=10, alpha=.1, family="binomial")
+cv.fit <- cv.glmnet(x=t(eset.culled2), y=factor(predictedClasses), nfolds=10, alpha=.1, family="binomial")
 plot(cv.fit)
-fitEnet <- glmnet(x=t(eset.culled), y=factor(predictedClasses), family="binomial", alpha=.1, lambda=cv.fit$lambda.min)
+fitEnet <- glmnet(x=t(eset.culled2), y=factor(predictedClasses), family="binomial", alpha=.1, lambda=cv.fit$lambda.min)
 
 
 
@@ -109,7 +133,7 @@ fitEnet <- glmnet(x=t(eset.culled), y=factor(predictedClasses), family="binomial
 ###############################################################################
 
 
-yhatEnet <- predict(fitEnet, t(rembrandtEset.culled), type="response", s="lambda.min")  #all of REMBRANDT
+yhatEnet <- predict(fitEnet, t(rembrandtEset.scaled), type="response", s="lambda.min")  #all of REMBRANDT
 
 boxplot(yhatEnet ~ predictedClasses.rembrandt, ylab="3-year OS prediction (%)", xlab="predicted POSTN group", main="elastic net validation")
 stripchart(yhatEnet ~ predictedClasses.rembrandt,pch=20, col="royalblue", vertical=TRUE, add=TRUE, cex=.6)
@@ -139,9 +163,9 @@ lowgradePat$survTime <- gbmPat.rembrandt$survTime[which(rembrandtPat$Grade==" II
 tmpSurv.lowgrade <- Surv(lowgradePat$survTime,lowgradePat$surv)
 
 
-yhatEnet <- predict(fitEnet, t(rembrandtEset.culled[,which(rembrandtPat$Grade==" III")]), type="response", s="lambda.min")
+yhatEnet <- predict(fitEnet, t(rembrandtEset.scaled[,which(rembrandtPat$Grade==" III")]), type="response", s="lambda.min")
 
-boxplot(yhatEnet ~ predictedClasses.rembrandt[which(rembrandtPat$Grade==" III")], ylab="3-year OS prediction (%)", xlab="predicted POSTN group", main="elastic net validation")
+boxplot(yhatEnet ~ predictedClasses.rembrandt[which(rembrandtPat$Grade==" III")], ylab="Predicted group", xlab="POSTN group", main="elastic net validation")
 stripchart(yhatEnet ~ predictedClasses.rembrandt[which(rembrandtPat$Grade==" III")],pch=20, col="royalblue", vertical=TRUE, add=TRUE, cex=.6)
 
 rocEnet <- roc(predictor=as.numeric(yhatEnet), response=as.numeric(predictedClasses.rembrandt[which(rembrandtPat$Grade==" III")]),ci=TRUE)
@@ -152,10 +176,10 @@ names(riskEnet) <- rownames(yhatEnet)
 
 
 
-ggkm(survfit(tmpSurv.lowgrade  ~ riskEnet),timeby=12,main="KM of REMBRANDT")
+#ggkm(survfit(tmpSurv.lowgrade  ~ riskEnet),timeby=12,main="KM of REMBRANDT")
 summary(survfit(tmpSurv.lowgrade  ~ riskEnet))
 
-plot(survfit(tmpSurv.lowgrade ~ riskEnet), main="elastic net model", xlab="months",ylab="probability of OS",col= c("blue","magenta"),lwd=3)
+plot(survfit(tmpSurv.lowgrade ~ riskEnet), main="elastic net model Grade III", xlab="months",ylab="probability of OS",col= c("blue","magenta"),lwd=3)
 survdiff(tmpSurv.lowgrade ~ riskEnet, rho=0)
 
 
@@ -179,9 +203,9 @@ lowgradePat$survTime <- gbmPat.rembrandt$survTime[which(rembrandtPat$Grade==" II
 tmpSurv.lowgrade <- Surv(lowgradePat$survTime,lowgradePat$surv)
 
 
-yhatEnet <- predict(fitEnet, t(rembrandtEset.culled[,which(rembrandtPat$Grade==" II")]), type="response", s="lambda.min") 
+yhatEnet <- predict(fitEnet, t(rembrandtEset.scaled[,which(rembrandtPat$Grade==" II")]), type="response", s="lambda.min") 
 
-boxplot(yhatEnet ~ predictedClasses.rembrandt[which(rembrandtPat$Grade==" II")], ylab="3-year OS prediction (%)", xlab="predicted POSTN group", main="elastic net validation")
+boxplot(yhatEnet ~ predictedClasses.rembrandt[which(rembrandtPat$Grade==" II")], ylab="Predicted group", xlab="POSTN group", main="elastic net validation")
 stripchart(yhatEnet ~ predictedClasses.rembrandt[which(rembrandtPat$Grade==" II")],pch=20, col="royalblue", vertical=TRUE, add=TRUE, cex=.6)
 
 rocEnet <- roc(predictor=as.numeric(yhatEnet), response=as.numeric(predictedClasses.rembrandt[which(rembrandtPat$Grade==" II")]),ci=TRUE)
@@ -192,12 +216,13 @@ names(riskEnet) <- rownames(yhatEnet)
 
 
 
-ggkm(survfit(tmpSurv.lowgrade  ~ riskEnet),timeby=12,main="KM of REMBRANDT")
+#ggkm(survfit(tmpSurv.lowgrade  ~ riskEnet),timeby=12,main="KM of REMBRANDT")
 summary(survfit(tmpSurv.lowgrade  ~ riskEnet))
 
 
-plot(survfit(tmpSurv.lowgrade ~ riskEnet), main="elastic net model", xlab="months",ylab="probability of OS",col= c("blue","magenta"),lwd=3)
+plot(survfit(tmpSurv.lowgrade ~ riskEnet), main="elastic net model Grade II", xlab="months",ylab="probability of OS",col= c("blue","magenta"),lwd=3)
 survdiff(tmpSurv.lowgrade ~ riskEnet, rho=0)
+#survdiff(tmpSurv.lowgrade ~ rembrandtEset["10631_mt",which(rembrandtPat$Grade==" II")]>8.75, rho=0)
 
 
 
@@ -248,31 +273,6 @@ survdiff(tmpSurv.rembrandt  ~ riskEnet, rho=0)
 
 
 ### Build a more robust classifer using bootstrapping
-
-
-
-# first rescale the data (chemores) to have the same mean and variance than the LUAD
-# Justin's function to rescale the VS to get the same mean/var than the TS
-normalize_to_X <- function(mean.x, sd.x, Y){
-  m.y <- rowMeans(Y)
-  sd.y <- apply(Y, 1, sd)
-  Y.adj <- (Y - m.y) * sd.x / sd.y  + mean.x 
-  Y.adj[sd.y == 0] <- mean.x[sd.y==0]
-  Y.adj
-}
-
-tmp <- apply(eset.culled,1,sd)
-rembrandtEset.scaled <- normalize_to_X(rowMeans(eset.culled),tmp,rembrandtEset.culled)
-
-#get rid of the least variant probes
-tmp1 <- which(tmp>quantile(tmp,probs=0.2))
-eset.culled2 <- eset.culled[tmp1,]
-rembrandtEset.scaled <- rembrandtEset.scaled[tmp1,]
-rm(tmp,tmp1)
-
-
-require(glmnet)
-
 
 # alpha = 0.1 optimize lambda nfolds=10
 # bootstrap 100 times
@@ -343,7 +343,7 @@ signFeatures <- unlist(lapply(names(select_features),function(y){
 }))
 
 
-temp <- names(sort(select_features)[90:100])
+temp <- names(sort(select_features)[100:1])
 temp <- names(select_features)[which(signFeatures<=0)]
 
 gene.names <- lapply(temp,function(x){
@@ -371,7 +371,7 @@ lowgradePat$survTime <- gbmPat.rembrandt$survTime[which(rembrandtPat$Grade==" II
 tmpSurv.lowgrade <- Surv(lowgradePat$survTime,lowgradePat$surv)
 
 
-yhatEnet <- predict(fitEnet, t(rembrandtEset.culled[,which(rembrandtPat$Grade==" III")]), type="response", s="lambda.min")
+yhatEnet <- predict(fitEnet, t(rembrandtEset.scaled[,which(rembrandtPat$Grade==" III")]), type="response", s="lambda.min")
 
 boxplot(yhatEnet ~ predictedClasses.rembrandt[which(rembrandtPat$Grade==" III")], ylab="3-year OS prediction (%)", xlab="predicted POSTN group", main="elastic net validation")
 stripchart(yhatEnet ~ predictedClasses.rembrandt[which(rembrandtPat$Grade==" III")],pch=20, col="royalblue", vertical=TRUE, add=TRUE, cex=.6)
