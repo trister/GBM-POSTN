@@ -79,7 +79,7 @@ rembrandtEset.culled <- rembrandtEset.culled[-grep("10631_eg",rownames(rembrandt
 
 
 
-# first rescale the data (chemores) to have the same mean and variance than the LUAD
+# first rescale the data  to have the same mean and variance 
 # Justin's function to rescale the VS to get the same mean/var than the TS
 normalize_to_X <- function(mean.x, sd.x, Y){
   m.y <- rowMeans(Y)

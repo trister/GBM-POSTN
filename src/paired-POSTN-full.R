@@ -13,7 +13,7 @@ require(snm)
 require(mGenomics)
 require(ggplot2)
 
-synapseLogin()
+# synapseLogin()
 
 phillipsCEL <- loadEntity("syn1444929")
 CELdir <- file.path(phillipsCEL$cacheDir, phillipsCEL$files)
@@ -86,64 +86,64 @@ boxplot(postn~grp)
 
 
 
-####
-# Old stuff
-
-int <- intensity(abatch)
-gene2row.cdf <- getGene2Row(NULL,annotation(abatch))
-
-pms <- int[unlist(gene2row.cdf),]
-pms[pms<=1] <- 1
-data <- log2(pms)
-
-colnames(data) <- rownames(phillipsMetadata)
-
-
-recurrent <- phillipsMetadata[grep("recurrent",phillipsMetadata$X.Sample_characteristics_ch1), "X.Sample_supplementary_file"]
-
-matchedPrimary <- unlist(lapply(phillipsMetadata$X.Sample_characteristics_ch1[recurrent],function(x){
-  strsplit(x,"Matching sample: ")[[1]][2]
-}))
-
-
-
-group <- rep(c("primary","recurrence"),each=length(recurrent))
-
-df <- data.frame(id=seq_along(group),group,data[10631,matchedPrimary],data[10631,recurrent])
-dfm <- melt(df,id.var=c("id","group"))
-
-ggplot(dfm,aes(variable,2^value,group=id)) + geom_path(alpha=0.5) +coord_trans(y="log2")
-
-
-data.culled <- data[,c(recurrent,matchedPrimary)]
-
-
-
-
-
-phillipsMetadata$sampleType <- sapply(phillipsMetadata$X.Sample_characteristics_ch1,function(x) {
-  if(grepl("primary",x)) return(1)
-  else return(0)
-})
-
-
-int.var <- data.frame(array=factor(1:ncol(data)))
-
-scanDate <- abatch@protocolData@data$ScanDate
-scanDate <- sapply(strsplit(scanDate, " "),"[[",1)
-scanDate <- as.Date(scanDate,format="%m/%d/%y")
-
-batch <- as.factor(scanDate)
-adj.var <- model.matrix(~batch)
-bio.var <- model.matrix(~phillipsMetadata$sampleType)
-
-snm.fit <- snm(data,bio.var=bio.var,adj.var=adj.var,int.var=int.var,rm.adj=T,diagnose=F)
-
-svdObj <- fast.svd(snm.fit$norm.dat)
-pcDF <- data.frame(svdObj$v[,1:2])
-colnames(pcDF) <- c("PrinComp1", "PrinComp2")
-
-pcPlot <- ggplot(pcDF,aes(PrinComp1,PrinComp2)) + 
-  geom_point(aes(color=batch),size=20) + scale_size(guide="none")
-
-pcPlot
+# ####
+# # Old stuff
+# 
+# int <- intensity(abatch)
+# gene2row.cdf <- getGene2Row(NULL,annotation(abatch))
+# 
+# pms <- int[unlist(gene2row.cdf),]
+# pms[pms<=1] <- 1
+# data <- log2(pms)
+# 
+# colnames(data) <- rownames(phillipsMetadata)
+# 
+# 
+# recurrent <- phillipsMetadata[grep("recurrent",phillipsMetadata$X.Sample_characteristics_ch1), "X.Sample_supplementary_file"]
+# 
+# matchedPrimary <- unlist(lapply(phillipsMetadata$X.Sample_characteristics_ch1[recurrent],function(x){
+#   strsplit(x,"Matching sample: ")[[1]][2]
+# }))
+# 
+# 
+# 
+# group <- rep(c("primary","recurrence"),each=length(recurrent))
+# 
+# df <- data.frame(id=seq_along(group),group,data[10631,matchedPrimary],data[10631,recurrent])
+# dfm <- melt(df,id.var=c("id","group"))
+# 
+# ggplot(dfm,aes(variable,2^value,group=id)) + geom_path(alpha=0.5) +coord_trans(y="log2")
+# 
+# 
+# data.culled <- data[,c(recurrent,matchedPrimary)]
+# 
+# 
+# 
+# 
+# 
+# phillipsMetadata$sampleType <- sapply(phillipsMetadata$X.Sample_characteristics_ch1,function(x) {
+#   if(grepl("primary",x)) return(1)
+#   else return(0)
+# })
+# 
+# 
+# int.var <- data.frame(array=factor(1:ncol(data)))
+# 
+# scanDate <- abatch@protocolData@data$ScanDate
+# scanDate <- sapply(strsplit(scanDate, " "),"[[",1)
+# scanDate <- as.Date(scanDate,format="%m/%d/%y")
+# 
+# batch <- as.factor(scanDate)
+# adj.var <- model.matrix(~batch)
+# bio.var <- model.matrix(~phillipsMetadata$sampleType)
+# 
+# snm.fit <- snm(data,bio.var=bio.var,adj.var=adj.var,int.var=int.var,rm.adj=T,diagnose=F)
+# 
+# svdObj <- fast.svd(snm.fit$norm.dat)
+# pcDF <- data.frame(svdObj$v[,1:2])
+# colnames(pcDF) <- c("PrinComp1", "PrinComp2")
+# 
+# pcPlot <- ggplot(pcDF,aes(PrinComp1,PrinComp2)) + 
+#   geom_point(aes(color=batch),size=20) + scale_size(guide="none")
+# 
+# pcPlot
