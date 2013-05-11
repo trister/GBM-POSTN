@@ -17,10 +17,11 @@ require(glmnet)
 require(randomForest)
 require(caret)
 require(survival)
+library(org.Hs.eg.db)
+ 
+synapseLogin()
 
- synapseLogin()
-
-phillipsCEL <- loadEntity("syn1444929")
+phillipsCEL <- loadEntity('syn1444929')
 CELdir <- file.path(phillipsCEL$cacheDir, phillipsCEL$files)
 cdfs <- sapply(CELdir,whatcdf)
 
@@ -157,14 +158,32 @@ plot(differenceMatched[order(differenceMatched)],main="Relative POSTN expression
 # Build an elasticnet model of recurrent versus primary
 ###
 
+
+
+#Now let's get an object to have geneIDs from Entrez
+x <- org.Hs.egSYMBOL
+# Get the gene symbol that are mapped to an entrez gene identifiers
+mapped_genes <- mappedkeys(x)
+# Convert to a list
+xx <- as.list(x[mapped_genes])
+if(length(xx) > 0) {
+  # Get the SYMBOL for the first five genes
+  xx[1:5]
+  # Get the first one
+  xx[[1]]
+}
+
+
+
+
 # tempEset <- cbind(primaryEset.scaled,recurrentEset.scaled)
-# tempEset <- cbind(primaryEset,recurrentEset)
-tempEset <- cbind(phillipsEset[,matchedPrimary],phillipsEset[,recurrent])
+ tempEset <- cbind(primaryEset,recurrentEset)
+#tempEset <- cbind(phillipsEset[,matchedPrimary],phillipsEset[,recurrent])
 #tempClasses <- rep(1:2,each=23)
 tempClasses <- c(-1:-23,1:23)
 
-# samfit <- SAM(tempEset,y=tempClasses,resp.type="Two class paired",
-#               geneid=rownames(primaryEset),fdr.output=0.001,logged2=TRUE)
+#  samfit <- SAM(tempEset,y=tempClasses,resp.type="Two class paired",
+#                geneid=rownames(primaryEset),fdr.output=0.01,logged2=TRUE)
 
 
  samfit <- SAM(tempEset,y=tempClasses,resp.type="Two class paired",
@@ -173,13 +192,16 @@ tempClasses <- c(-1:-23,1:23)
 
 
 genes.interest <- c(samfit$siggenes.table$genes.up[,2],samfit$siggenes.table$genes.lo[,2])
- genes.interest <- samfit$siggenes.table$genes.up[,2]
+# genes.interest <- samfit$siggenes.table$genes.up[,2]
 
 gene.names <- lapply(genes.interest,function(x){
   return(xx[strsplit(x,"_mt")[[1]]])
 })
 
 paste(unlist(gene.names),collapse=" ")
+temp <- c("LMCD1", "MGP", "FMOD", "EMILIN1", "COL5A2", "COL5A1", "KCNE4", "GAS1", "MMP2", "SRPX", "CHL1", "PDGF")
+
+intersect(temp,unlist(gene.names))
 
 
 

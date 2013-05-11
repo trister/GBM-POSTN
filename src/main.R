@@ -12,6 +12,9 @@ require(synapseClient)
 setwd("~/GBM-POSTN/")
 synapseLogin()
 
+# source("http://depot.sagebase.org/CRAN.R")
+# pkgInstall(c('synapseClient'))
+
 #get all of the data structures necessary from Synapse
 source("./src/populateData.R") 
 

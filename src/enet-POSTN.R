@@ -123,6 +123,49 @@ fitEnet <- glmnet(x=t(eset.culled2), y=factor(predictedClasses), family="binomia
 
 
 
+# 
+# 
+# #run elasticnet on the whole GBM set
+# #fit a model to the distribution of POSTN in all GBMs
+# POSTNclassAll <- normalmixEM(allGBMeset['10631_eg',],lambda=0.5,mu=c(6.5,11.5),sigma=1)
+# predictedClassesAll <- rep(1,length(POSTNclassAll$x))
+# for(i in 1:length(POSTNclassAll$x)) {
+#   if(POSTNclassAll$posterior[i,2] > POSTNclassAll$posterior[i,1])
+#     predictedClassesAll[i] <- 2
+# }
+# 
+# 
+# allGBMeset.culled <- allGBMeset[-grep("10631_eg",rownames(allGBMeset)),]
+# 
+# 
+# tmp <- apply(allGBMeset.culled,1,sd)
+# 
+# #get rid of the least variant probes
+# tmp1 <- which(tmp>quantile(tmp,probs=0.2))
+# allGBMeset.culled <- allGBMeset.culled[tmp1,]
+# rm(tmp,tmp1)
+# 
+# 
+# 
+# 
+# 
+# cv.fit <- cv.glmnet(x=t(allGBMeset.culled), y=factor(predictedClassesAll), nfolds=10, alpha=.1, family="binomial")
+# plot(cv.fit)
+# fitEnet <- glmnet(x=t(allGBMeset.culled), y=factor(predictedClassesAll), family="binomial", alpha=.1, lambda=cv.fit$lambda.min)
+# 
+# 
+# cv.fit <- cv.glmnet(x=t(allGBMeset.culled), y=allGBMeset['10631_eg',], nfolds=10,alpha=0.1)
+# plot(cv.fit)
+# fitEnet <- glmnet(x=t(allGBMeset.culled), y=allGBMeset['10631_eg',], alpha=.1, lambda=cv.fit$lambda.min)
+# 
+
+gene.names <- lapply(rownames(eset)[which(abs(fitEnet$beta)>0)],function(x){
+  return(xx[strsplit(x,"_eg")[[1]]])
+})
+
+paste(unlist(gene.names),collapse=" ")
+
+
 
 
 
